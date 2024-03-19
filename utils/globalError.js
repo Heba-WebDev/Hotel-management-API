@@ -1,4 +1,6 @@
-class AppError extends Error {
+class globalError extends Error {
+  statusCode;
+  statusText;
   constructor(message, code, text) {
     super(message);
     this.statusCode = code;
@@ -6,6 +8,4 @@ class AppError extends Error {
   }
 }
 
-const globalError = new AppError();
-
-export default globalError;
+export { globalError };

@@ -1,22 +1,25 @@
 import express from "express";
 import cors from "cors";
-import { roomsRouter } from "./routes/rooms.routes";
-import { ERROR, FAIL } from "./utils/httpStatusCode";
+import connectDB from "./db/mongoose.js";
+import { roomsRouter } from "./routes/rooms.routes.js";
+import { statusCode } from "./utils/httpStatusCode.js";
+import { roomTypesRouter } from "./routes/roomtypes.routes.js";
+const { FAIL, ERROR } = statusCode;
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5001;
 
 app.use(cors());
 app.use(express.json());
 
 app.use("/api/v1/rooms", roomsRouter);
+app.use("/api/v1/roomsTypes", roomTypesRouter);
 
 // Error handling middleware
 app.use((error, req, res, next) => {
-  console.error("Error: ", error);
-  res.status(error?.statusCode || 500).json({
-    status: ERROR,
-    message: error.message || "An error occurred.",
+  res.status(error.statusCode || 500).json({
+    status: error.statusText,
+    message: error.message,
   });
 });
 
@@ -30,5 +33,6 @@ app.use("*", (req, res, next) => {
 });
 
 app.listen(port, () => {
+  connectDB();
   console.log(`The app is running on port ${port}`);
 });
