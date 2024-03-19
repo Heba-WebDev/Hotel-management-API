@@ -1,20 +1,182 @@
-import { wrapper } from "../middlewares/asyncWrapper";
-import { SUCCESS, FAIL } from "../utils/httpStatusCode";
+import wrapper from "../middlewares/asyncWrapper.js";
+import { roomModel } from "../models/Room.js";
+import { roomTypeModel } from "../models/RoomType.js";
+import { globalError } from "../utils/globalError.js";
+import { statusCode } from "../utils/httpStatusCode.js";
+const { SUCCESS, FAIL } = statusCode;
 
-// wrapper handles the catch block - to not repeat code
-const getAllRooms = wrapper(async (req, res, next) => {});
+/*
+  NOTE: wrapper handles the catch block -
+  to not repeat code in each controller
+*/
 
-const getRoomById = wrapper(async (req, res, next) => {});
+const getAllRooms = wrapper(async (req, res, next) => {
+  const { searchRoomNameMatch, searchRoomTypeNameMatch, minPrice, maxPrice } =
+    req.query;
+  const query = {};
+  if (searchRoomNameMatch) {
+    query.name = { $regex: searchRoomNameMatch, $options: "i" };
+  }
+  if (searchRoomTypeNameMatch) {
+    query.roomType = searchRoomTypeNameMatch;
+  }
+  if (minPrice || maxPrice) {
+    query.price = {};
+    if (minPrice) {
+      query.price.$gte = parseFloat(minPrice);
+    }
+    if (maxPrice) {
+      query.price.$lte = parseFloat(maxPrice);
+    }
+  }
+  const rooms = await roomModel.find(query);
+  res.status(200).send({
+    status: SUCCESS,
+    message: null,
+    data: rooms,
+  });
+});
 
-const getAllRoomTypes = wrapper(async (req, res, next) => {});
+const getRoomById = wrapper(async (req, res, next) => {
+  const id = req.params.id;
+  if (!id) {
+    const err = new globalError("A room id is required.", 404, FAIL);
+    return next(err);
+  }
+  const room = await roomModel.findById(id);
+  if (!room) {
+    const err = new globalError("No room found.", 404, FAIL);
+    return next(err);
+  }
+  res.status(200).send({
+    status: SUCCESS,
+    message: null,
+    data: room,
+  });
+});
 
-const createRoomType = wrapper(async (req, res, next) => {});
+const getAllRoomTypes = wrapper(async (req, res, next) => {
+  const rooms = await roomTypeModel.find();
+  res.status(200).send({
+    status: SUCCESS,
+    message: null,
+    data: rooms,
+  });
+});
 
-const createRoom = wrapper(async (req, res, next) => {});
+const createRoomType = wrapper(async (req, res, next) => {
+  const { name } = req.body;
+  if (!name) {
+    const err = new globalError(
+      "A name for the room type is required.",
+      404,
+      FAIL
+    );
+    return next(err);
+  }
+  const existingRoomType = await roomTypeModel.findOne({ name });
+  if (existingRoomType) {
+    const err = new globalError("Room type already exists.", 404, FAIL);
+    return next(err);
+  }
+  const newRoomType = new roomTypeModel({ name });
+  await newRoomType.save();
+  res.status(201).send({
+    status: SUCCESS,
+    message: "Room type successfully created.",
+    data: null,
+  });
+});
 
-const updateRoom = wrapper(async (req, res, next) => {});
+const createRoom = wrapper(async (req, res, next) => {
+  const { name, roomType, price } = req.body;
+  if (!name || !roomType || !price) {
+    const err = new globalError(
+      "A name, room type and a price are required.",
+      404,
+      FAIL
+    );
+    return next(err);
+  }
+  const type = await roomTypeModel.findOne({ name: roomType });
+  if (!type) {
+    const err = new globalError("A vaild room type is required.", 404, FAIL);
+    return next(err);
+  }
+  if (!Number.isFinite(price)) {
+    const err = new globalError("A vaild price is required.", 404, FAIL);
+    return next(err);
+  }
+  const newRoomType = await roomModel.create({ name, roomType, price });
+  await newRoomType.save();
+  res.status(201).send({
+    status: SUCCESS,
+    message: "Room successfully added.",
+    data: newRoomType,
+  });
+});
 
-const deleteRoom = wrapper(async (req, res, next) => {});
+const updateRoom = wrapper(async (req, res, next) => {
+  const { id, name, price, roomType } = req.body;
+  if (!id) {
+    const err = new globalError("A room id is required.", 404, FAIL);
+    return next(err);
+  }
+  if (!name && !price && !roomType) {
+    const err = new globalError(
+      "A name, roomType or price are required.",
+      404,
+      FAIL
+    );
+    return next(err);
+  }
+  const room = await roomModel.findById(id);
+  if (!room) {
+    const err = new globalError("No room found.", 404, FAIL);
+    return next(err);
+  }
+  const type = await roomTypeModel.findOne({ name: roomType });
+  if (roomType && !type) {
+    const err = new globalError("A vaild room type is required.", 404, FAIL);
+    return next(err);
+  } else {
+    await room.updateOne(roomType);
+  }
+  if (price && !Number.isFinite(price)) {
+    const err = new globalError("A vaild price is required.", 404, FAIL);
+    return next(err);
+  } else {
+    await room.updateOne(price);
+  }
+  if (name) {
+    await room.updateOne(name);
+  }
+  await room.save();
+  res.status(200).send({
+    status: SUCCESS,
+    message: "Room successfully update.",
+    data: room,
+  });
+});
+
+const deleteRoom = wrapper(async (req, res, next) => {
+  const { id } = req.body;
+  if (!id) {
+    const err = new globalError("A room id is required.", 404, FAIL);
+    return next(err);
+  }
+  const room = await roomModel.findById(id);
+  if (!room) {
+    const err = new globalError("No room found.", 404, FAIL);
+    return next(err);
+  }
+  await room.deleteOne();
+  res.status(204).send({
+    status: SUCCESS,
+    message: null,
+    data: null,
+  });
+});
 
 export {
   getAllRoomTypes,
