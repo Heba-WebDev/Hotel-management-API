@@ -1,4 +1,6 @@
 import express from "express";
+import { verifyToken } from "../middlewares/verifyToken.js";
+import validatorMiddleware from "../middlewares/inputValidator.js";
 import {
   getAllRooms,
   getRoomById,
@@ -11,6 +13,12 @@ export const roomsRouter = express.Router();
 
 roomsRouter.route("/").get(getAllRooms);
 roomsRouter.route("/:id").get(getRoomById);
-roomsRouter.route("/").post(createRoom);
-roomsRouter.route("/").patch(updateRoom);
-roomsRouter.route("/").delete(deleteRoom);
+roomsRouter
+  .route("/")
+  .post(validatorMiddleware("createRoomSchema"), verifyToken, createRoom);
+roomsRouter
+  .route("/")
+  .patch(validatorMiddleware("getRoomByIdSchema"), verifyToken, updateRoom);
+roomsRouter
+  .route("/")
+  .delete(validatorMiddleware("getRoomByIdSchema"), verifyToken, deleteRoom);
