@@ -39,10 +39,6 @@ const getAllRooms = wrapper(async (req, res, next) => {
 
 const getRoomById = wrapper(async (req, res, next) => {
   const id = req.params.id;
-  if (!id) {
-    const err = new globalError("A room id is required.", 404, FAIL);
-    return next(err);
-  }
   const room = await roomModel.findById(id);
   if (!room) {
     const err = new globalError("No room found.", 404, FAIL);
@@ -76,7 +72,7 @@ const createRoomType = wrapper(async (req, res, next) => {
   }
   const existingRoomType = await roomTypeModel.findOne({ name });
   if (existingRoomType) {
-    const err = new globalError("Room type already exists.", 404, FAIL);
+    const err = new globalError("Room type already exists.", 400, FAIL);
     return next(err);
   }
   const newRoomType = new roomTypeModel({ name });
@@ -90,21 +86,18 @@ const createRoomType = wrapper(async (req, res, next) => {
 
 const createRoom = wrapper(async (req, res, next) => {
   const { name, roomType, price } = req.body;
-  if (!name || !roomType || !price) {
-    const err = new globalError(
-      "A name, room type and a price are required.",
-      404,
-      FAIL
-    );
-    return next(err);
-  }
+  const token = req?.decodedToken;
   const type = await roomTypeModel.findOne({ name: roomType });
   if (!type) {
     const err = new globalError("A vaild room type is required.", 404, FAIL);
     return next(err);
   }
-  if (!Number.isFinite(price)) {
-    const err = new globalError("A vaild price is required.", 404, FAIL);
+  if (token?.role !== "Admin") {
+    const err = new globalError(
+      "Unauthorized to perform this action.",
+      401,
+      FAIL
+    );
     return next(err);
   }
   const newRoomType = await roomModel.create({ name, roomType, price });
@@ -118,8 +111,13 @@ const createRoom = wrapper(async (req, res, next) => {
 
 const updateRoom = wrapper(async (req, res, next) => {
   const { id, name, price, roomType } = req.body;
-  if (!id) {
-    const err = new globalError("A room id is required.", 404, FAIL);
+  const token = req.decodedToken;
+  if (token?.role !== "Admin") {
+    const err = new globalError(
+      "Unauthorized to perform this action.",
+      401,
+      FAIL
+    );
     return next(err);
   }
   if (!name && !price && !roomType) {
@@ -161,8 +159,13 @@ const updateRoom = wrapper(async (req, res, next) => {
 
 const deleteRoom = wrapper(async (req, res, next) => {
   const { id } = req.body;
-  if (!id) {
-    const err = new globalError("A room id is required.", 404, FAIL);
+  const token = req.decodedToken;
+  if (token?.role !== "Admin") {
+    const err = new globalError(
+      "Unauthorized to perform this action.",
+      401,
+      FAIL
+    );
     return next(err);
   }
   const room = await roomModel.findById(id);
