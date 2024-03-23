@@ -1,4 +1,6 @@
 import express from "express";
+import { verifyToken } from "../middlewares/verifyToken.js";
+import validatorMiddleware from "../middlewares/inputValidator.js";
 import {
   createRoomType,
   getAllRoomTypes,
@@ -7,4 +9,10 @@ import {
 export const roomTypesRouter = express.Router();
 
 roomTypesRouter.route("/").get(getAllRoomTypes);
-roomTypesRouter.route("/").post(createRoomType);
+roomTypesRouter
+  .route("/")
+  .post(
+    validatorMiddleware("createRoomTypeSchema"),
+    verifyToken,
+    createRoomType
+  );
