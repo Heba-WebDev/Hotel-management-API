@@ -70,6 +70,20 @@ const createRoomType = wrapper(async (req, res, next) => {
     );
     return next(err);
   }
+  const token = req?.decodedToken;
+  if (token?.role !== "Admin") {
+    const err = new globalError(
+      "Unauthorized to perform this action.",
+      401,
+      FAIL
+    );
+    return next(err);
+  }
+  const type = await roomTypeModel.findOne({ name: roomType });
+  if (!type) {
+    const err = new globalError("A vaild room type is required.", 404, FAIL);
+    return next(err);
+  }
   const existingRoomType = await roomTypeModel.findOne({ name });
   if (existingRoomType) {
     const err = new globalError("Room type already exists.", 400, FAIL);
