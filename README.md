@@ -4,6 +4,33 @@ This is a Hotel Management API! It allows to manage rooms and room types of a ho
 
 ## _Routes_
 
+### Users 
+## Endpoint: /api/v1/users
+---
+--
+    ```
+    POST /api/v1/users/register
+    ```
+
+- User signs up with username, email and password.
+
+--
+    ```
+    POST /api/v1/users/login
+    ```
+
+- User logs in with email and password.
+
+--
+    ```
+    DELETE /api/v1/users/
+    ```
+
+- User deletes their account or an admin can delete a user account. An user id is required. Protected route (ONLY ADMIN)
+
+
+
+
 ### Rooms 
 ## Endpoint: /api/v1/rooms
 ---
@@ -12,7 +39,7 @@ This is a Hotel Management API! It allows to manage rooms and room types of a ho
     GET /api/v1/rooms
     ```
 
-- Fetches all rooms | Optional query parameters to filter the rooms by name, roomType and price.
+- Fetches all rooms | Optional query parameters to filter the rooms by name, roomType and price. 
 
 --
     ```
@@ -26,14 +53,14 @@ This is a Hotel Management API! It allows to manage rooms and room types of a ho
     POST /api/v1/rooms/
     ```
 
-- Creates a new room. Required: name, roomType and price.
+- Creates a new room. Required: name, roomType and price. Protected route (ONLY ADMIN)
 
 --
     ```
     PATCH /api/v1/rooms/
     ```
 
-- Updates a room. Required: id. Optional: name, roomType or price.
+- Updates a room. Required: id. Optional: name, roomType or price. Protected route (ONLY ADMIN)
 
 --
     ```
@@ -57,7 +84,7 @@ This is a Hotel Management API! It allows to manage rooms and room types of a ho
     POST /api/v1/roomsTypes
     ```
 
-- Creates a new type of room. Only possible options to create are: ["Single", "Double", "Triple", "Studio", "Suite", "Presidential Suite"].
+- Creates a new type of room. Only possible options to create are: ["Single", "Double", "Triple", "Studio", "Suite", "Presidential Suite"]. Protected route (ONLY ADMIN)
 
 
 
